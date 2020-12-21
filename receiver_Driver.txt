@@ -1,0 +1,24 @@
+RECEIVER’S DRIVER:
+
+MVI A , 8Ah   ;Command Byte-A is 10001010
+OUT  03h      ;Load the command into control register to configure 8255 chip
+MVI D , 01h   ;Initialize the counter D with value 1 which ranges from [1,10]
+LXI H , 2000h ;Assuming that the data received will be stored from 2000h location onwards
+MVI A , 00h
+OUT 02h ;initialize Port-C register with 00h
+LOOP: IN 01h  ;01h is the location of Port-B
+      CMP D
+      JZ READDATA
+      JNZ LOOP ;Keeps on checking for sender’s signal at P-B, if no signal busy wait
+READDATA: IN 00h  ;Receiving Data from PORT-A(00h)
+          MOV M , A
+          INX H
+          MOV A , D
+          OUT 02h ;Sending a special byte to P-C to signal sender that data is received
+          JMP CHECK
+CHECK: INR D          
+       MOV A , D
+       CPI 0Bh  ;READDATA should run for 10 times(10 bytes of data)
+       JNZ LOOP
+       JZ END ;if counter value becomes more than 10, then end the program
+END: HLT

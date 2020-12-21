@@ -1,0 +1,26 @@
+SENDER’S DRIVER:
+
+
+MVI A , 82h      ;Command Byte-A is 10000010
+OUT 03h          ;Load the command into control register to configure 8255 chip.
+MVI D , 01h      ;Initialize the counter D with value 1 which ranges from [1,10]
+LXI H , 3000h    ;Assuming that the first byte of data to be sent is starting from 3000h 
+MVI A , 00h
+OUT 02h ;Initialize Port-C register with 00h
+SENDDATA: MOV A , M  
+	  INX H
+          OUT 00h    ;Sending Data to PORT-A
+          MOV A , D
+          OUT 02h  ;sending a special byte to P-C to signal receiver that data is sent
+LOOP: IN 01h
+      CMP D
+      JZ CHECK   
+      JNZ LOOP ;keeps on checking for receiver’s signal at P-B, if no signal busy wait
+CHECK: INR D
+       MOV A , D
+       CPI 0Bh ;SENDDATA should run for 10 times(10 bytes of data)
+       JNZ SENDDATA
+       JZ END ;if counter values becomes more than 10,then end the program
+END: HLT
+          
+
